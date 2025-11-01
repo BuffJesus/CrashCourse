@@ -16,8 +16,7 @@ EHitDirection UCC_BlueprintLibrary::GetHitDirection(const FVector& TargetForward
 	if (Dot < 0.5f)
 	{
 		// Either Left or Right
-		const FVector Cross = FVector::CrossProduct(TargetForward, ToInstigator);
-		if (Cross.Z < 0.f)
+		if (const FVector Cross = FVector::CrossProduct(TargetForward, ToInstigator); Cross.Z < 0.f)
 		{
 			return EHitDirection::Left;
 		}
@@ -44,17 +43,15 @@ FClosestActorWithTagResult UCC_BlueprintLibrary::FindClosestActorWithTag(const U
 	TArray<AActor*> ActorsWithTag;
 	UGameplayStatics::GetAllActorsWithTag(WorldContextObject, Tag, ActorsWithTag);
 
-	float ClosestDistance = FLT_MAX;
+	float ClosestDistance = TNumericLimits<float>::Max();
 	AActor* ClosestActor = nullptr;
 
 	for (AActor* Actor : ActorsWithTag)
 	{
 		if (!IsValid(Actor)) continue;
-		ACC_BaseCharacter* BaseCharacter = Cast<ACC_BaseCharacter>(Actor);
-		if (!IsValid(BaseCharacter) || !BaseCharacter->IsAlive()) continue;
+		if (const ACC_BaseCharacter* BaseCharacter = Cast<ACC_BaseCharacter>(Actor); !IsValid(BaseCharacter) || !BaseCharacter->IsAlive()) continue;
 
-		const float Distance = FVector::Dist(Origin, Actor->GetActorLocation());
-		if (Distance < ClosestDistance)
+		if (const float Distance = FVector::Dist(Origin, Actor->GetActorLocation()); Distance < ClosestDistance)
 		{
 			ClosestDistance = Distance;
 			ClosestActor = Actor;
