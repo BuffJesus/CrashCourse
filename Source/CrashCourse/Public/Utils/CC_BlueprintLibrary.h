@@ -28,7 +28,7 @@ struct FClosestActorWithTagResult
 };
 
 /**
- * 
+ *
  */
 UCLASS()
 class CRASHCOURSE_API UCC_BlueprintLibrary : public UBlueprintFunctionLibrary
@@ -45,5 +45,5 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	static FClosestActorWithTagResult FindClosestActorWithTag(const UObject* WorldContextObject, const FVector& Origin, const FName& Tag);
-	
+		
 };
