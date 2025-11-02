@@ -3,9 +3,11 @@
 
 #include "GameObjects/CC_Projectile.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Characters/CC_PlayerCharacter.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "GameplayTags/CC_Tags.h"
 
 
 ACC_Projectile::ACC_Projectile()
@@ -31,7 +33,7 @@ void ACC_Projectile::NotifyActorBeginOverlap(AActor* OtherActor)
 	FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
 	FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(DamageEffect, 1.f, ContextHandle);
 
-	// TODO: Use damage variable to adjust damage to cause
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, CCTags::SetByCaller::Projectile, Damage);
 	
 	AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
