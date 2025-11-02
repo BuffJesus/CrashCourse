@@ -19,8 +19,8 @@ public:
 	ACC_Projectile();
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Crash|Damage", meta = (ExposeOnSpawn, ClampMax = "0.0"))
-	float Damage{-25.f};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Crash|Damage", meta = (ExposeOnSpawn, ClampMin = "0.0"))
+	float Damage{25.f};
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Crash|Projectile")
 	void SpawnImpactEffects();

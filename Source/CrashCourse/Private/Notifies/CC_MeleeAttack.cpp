@@ -14,8 +14,7 @@ void UCC_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequence
 {
 	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
-	if (!IsValid(MeshComp)) return;
-	if (!IsValid(MeshComp->GetOwner())) return;
+	if (!IsValid(MeshComp) || !IsValid(MeshComp->GetOwner())) return;
 
 	TArray<FHitResult> Hits = PerformSphereTrace(MeshComp);
 	SendEventsToActors(MeshComp, Hits);
@@ -26,13 +25,12 @@ TArray<FHitResult> UCC_MeleeAttack::PerformSphereTrace(USkeletalMeshComponent* M
 	TArray<FHitResult> OutHits;
 	
 	UWorld* World = GEngine->GetWorldFromContextObject(MeshComp, EGetWorldErrorMode::LogAndReturnNull);
-	const FVector Start = MeshComp->GetSocketTransform(SocketName, RTS_World).GetLocation();
-	const FVector ExtendedSocketDirection = MeshComp->GetSocketTransform(SocketName, RTS_World).GetRotation().GetForwardVector()*SocketExtensionOffset;
-	const FVector End = Start - ExtendedSocketDirection;
+	const FTransform SocketTransform = MeshComp->GetSocketTransform(SocketName, RTS_World);
+	const FVector Start = SocketTransform.GetLocation();
+	const FVector End = Start - (SocketTransform.GetRotation().GetForwardVector() * SocketExtensionOffset);
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(MeshComp->GetOwner());
-	FCollisionResponseParams ResponseParams;
-	ResponseParams.CollisionResponse.SetAllChannels(ECR_Ignore);
+	FCollisionResponseParams ResponseParams(ECR_Ignore);
 	ResponseParams.CollisionResponse.SetResponse(ECC_Pawn, ECR_Block);
 
 	if (!IsValid(World)) return OutHits;
@@ -55,8 +53,8 @@ TArray<FHitResult> UCC_MeleeAttack::PerformSphereTrace(USkeletalMeshComponent* M
 			EDrawDebugTrace::ForDuration,
 			bHit,
 			OutHits,
-			FColor::Green,
 			FColor::Red,
+			FColor::Green,
 			5.f);
 	}
 	
@@ -68,8 +66,7 @@ void UCC_MeleeAttack::SendEventsToActors(USkeletalMeshComponent* MeshComp, const
 	for (const FHitResult& Hit : Hits)
 	{
 		ACC_PlayerCharacter* PlayerCharacter = Cast<ACC_PlayerCharacter>(Hit.GetActor());
-		if (!IsValid(PlayerCharacter)) continue;
-		if (!PlayerCharacter->IsAlive()) continue;
+		if (!IsValid(PlayerCharacter) || !PlayerCharacter->IsAlive()) continue;
 		UAbilitySystemComponent* ASC = PlayerCharacter->GetAbilitySystemComponent();
 		if (!IsValid(ASC)) continue;
 
