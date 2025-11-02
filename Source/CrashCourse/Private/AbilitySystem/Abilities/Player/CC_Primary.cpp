@@ -4,6 +4,7 @@
 #include "AbilitySystem/Abilities/Player/CC_Primary.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Characters/CC_BaseCharacter.h"
 #include "Engine/OverlapResult.h"
 #include "GameplayTags/CC_Tags.h"
 
@@ -31,6 +32,13 @@ TArray<AActor*> UCC_Primary::HitBoxOverlapTest()
 	for (const FOverlapResult& Result : OverlapResults)
 	{
 		if (!IsValid(Result.GetActor())) continue;
+		
+		// ADD THIS: Filter out all player characters to prevent friendly fire
+		if (Result.GetActor()->ActorHasTag(CrashTags::Player))
+		{
+			continue; // Skip player characters
+		}
+		
 		ActorsHit.AddUnique(Result.GetActor());
 	}
 	
@@ -40,7 +48,6 @@ TArray<AActor*> UCC_Primary::HitBoxOverlapTest()
 	}
 
 	return ActorsHit;
-	
 }
 
 void UCC_Primary::SendHitReactEventToActors(const TArray<AActor*>& ActorsHit)
