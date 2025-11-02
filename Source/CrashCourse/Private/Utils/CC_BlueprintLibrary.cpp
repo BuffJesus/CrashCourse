@@ -4,6 +4,7 @@
 #include "Utils/CC_BlueprintLibrary.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "BlendSpaceAnalysis.h"
 #include "AbilitySystem/CC_AttributeSet.h"
 #include "Characters/CC_BaseCharacter.h"
 #include "Engine/OverlapResult.h"
@@ -158,4 +159,48 @@ void UCC_BlueprintLibrary::DrawHitBoxOverlapDebugs(const UObject* WorldContextOb
 			DrawDebugSphere(World, DebugLocation, 30.f, 10, FColor::Green, false, 3.f);
 		}
 	}
+}
+
+TArray<AActor*> UCC_BlueprintLibrary::ApplyKnockback(AActor* AvatarActor, const TArray<AActor*>& HitActors, float InnerRadius,
+	float OuterRadius, float LaunchForceMagnitude, float RotationAngle, bool bDrawDebugs)
+{
+	for (AActor* HitActor : HitActors)
+	{
+		ACharacter* HitCharacter = Cast<ACharacter>(HitActor);
+		if (!IsValid(HitCharacter) || !IsValid(AvatarActor)) return TArray<AActor*>();
+
+		const FVector HitCharacterLocation = HitCharacter->GetActorLocation();
+		const FVector AvatarLocation = AvatarActor->GetActorLocation();
+
+		const FVector ToHitActor = HitCharacterLocation - AvatarLocation;
+		const float Distance = FVector::Dist(AvatarLocation, HitCharacterLocation);
+
+		float LaunchForce = 0.f;
+		if (Distance > OuterRadius) continue;
+		if (Distance <= InnerRadius)
+		{
+			LaunchForce = LaunchForceMagnitude;
+		}
+		else
+		{
+			const FVector2D FallOffRange(InnerRadius, OuterRadius); // input range
+			const FVector2D LaunchForceRange(LaunchForceMagnitude, 0.f); // output range
+			LaunchForce = FMath::GetMappedRangeValueClamped(FallOffRange, LaunchForceRange, Distance);
+		}
+		if (bDrawDebugs) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("LaunchForce: %f"), LaunchForce));
+
+		FVector KnockbackForce = ToHitActor.GetSafeNormal();
+		KnockbackForce.Z = 0.f;
+
+		const FVector Right = KnockbackForce.RotateAngleAxis(90.f, FVector::UpVector);
+		KnockbackForce = KnockbackForce.RotateAngleAxis(-RotationAngle, Right) * LaunchForce;
+
+		if (bDrawDebugs)
+		{
+			UWorld* World = GEngine->GetWorldFromContextObject(AvatarActor, EGetWorldErrorMode::LogAndReturnNull);
+			DrawDebugDirectionalArrow(World, HitCharacterLocation, HitCharacterLocation + KnockbackForce, 100.f, FColor::Red, 0.f, 10.f, 1.f);
+		}
+		HitCharacter->LaunchCharacter(KnockbackForce, true, true);
+	}
+	return HitActors;
 }
