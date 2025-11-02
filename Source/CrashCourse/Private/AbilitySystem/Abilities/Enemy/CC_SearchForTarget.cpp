@@ -4,12 +4,15 @@
 #include "AbilitySystem/Abilities/Enemy/CC_SearchForTarget.h"
 
 #include "AIController.h"
+#include "Abilities/Async/AbilityAsync_WaitGameplayEvent.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "Characters/CC_BaseCharacter.h"
 #include "Characters/CC_EnemyCharacter.h"
 #include "GameplayTags/CC_Tags.h"
-#include "Tasks/CC_AITask_FindAndMoveToTarget.h"
+#include "Tasks/AITask_MoveTo.h"
+#include "Utils/CC_BlueprintLibrary.h"
+
+class UAbilityAsync_WaitGameplayEvent;
 
 UCC_SearchForTarget::UCC_SearchForTarget()
 {
@@ -28,95 +31,78 @@ void UCC_SearchForTarget::ActivateAbility(const FGameplayAbilitySpecHandle Handl
 	OwningAIController = Cast<AAIController>(OwningEnemy->GetController());
 	check(OwningAIController.IsValid());
 
-	StartSearchAndAttackCycle();
+	StartSearch();
 
-	// Listen for attack end to restart the cycle
 	WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
 		this, CCTags::Events::Enemy::EndAttack);
-	WaitGameplayEventTask->EventReceived.AddDynamic(this, &ThisClass::OnAttackEnded);
+	WaitGameplayEventTask->EventReceived.AddDynamic(this, &ThisClass::EndAttackEventReceived);
 	WaitGameplayEventTask->ReadyForActivation();
 }
 
-void UCC_SearchForTarget::StartSearchAndAttackCycle()
+void UCC_SearchForTarget::StartSearch()
 {
-	if (bDrawDebugs && GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Starting search and attack cycle"));
-	}
+	if (bDrawDebugs) GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf( TEXT("Searching for Target")));
+	if (!OwningEnemy.IsValid()) return;
 	
-	if (!OwningEnemy.IsValid() || !OwningAIController.IsValid()) return;
-	
-	FindAndMoveTask = UCC_AITask_FindAndMoveToTarget::FindAndMoveToTarget(
-		OwningAIController.Get(),
-		CrashTags::Player,
-		OwningEnemy->AcceptanceRadius,
-		OwningEnemy->MinAttackDelay,
-		OwningEnemy->MaxAttackDelay
-	);
-	
-	if (FindAndMoveTask)
-	{
-		FindAndMoveTask->OnTargetReached.AddDynamic(this, &ThisClass::OnTargetReached);
-		FindAndMoveTask->OnNoTargetFound.AddDynamic(this, &ThisClass::OnNoTargetFound);
-		FindAndMoveTask->ReadyForActivation();
-	}
+	const float SearchDelay = FMath::RandRange(OwningEnemy->MinAttackDelay, OwningEnemy->MaxAttackDelay);
+	SearchDelayTask = UAbilityTask_WaitDelay::WaitDelay(this, SearchDelay);
+	SearchDelayTask->OnFinish.AddDynamic(this, &ThisClass::Search);
+	SearchDelayTask->ReadyForActivation();
 }
 
-void UCC_SearchForTarget::OnTargetReached(AActor* Target)
+void UCC_SearchForTarget::EndAttackEventReceived(FGameplayEventData Payload)
 {
-	TargetBaseCharacter = Cast<ACC_BaseCharacter>(Target);
-	
-	if (!TargetBaseCharacter.IsValid() || !TargetBaseCharacter->IsAlive())
-	{
-		if (bDrawDebugs && GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("Target reached but invalid or dead"));
-		}
-		return; // The task will automatically restart search
-	}
+	StartSearch();
+}
 
-	if (bDrawDebugs && GEngine)
+void UCC_SearchForTarget::Search()
+{
+	const FVector SearchOrigin = GetAvatarActorFromActorInfo()->GetActorLocation();
+	FClosestActorWithTagResult ClosestActorResult = UCC_BlueprintLibrary::FindClosestActorWithTag(this, SearchOrigin, CrashTags::Player);
+
+	TargetBaseCharacter = Cast<ACC_BaseCharacter>(ClosestActorResult.Actor);
+	if (!TargetBaseCharacter.IsValid())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("Target reached - preparing to attack"));
+		StartSearch();
+		return;
 	}
-	
-	// Rotate to face target
-	if (OwningEnemy.IsValid())
+	if (TargetBaseCharacter->IsAlive())
 	{
-		OwningEnemy->RotateToTarget(TargetBaseCharacter.Get());
+		MoveToTargetAndAttack();
 	}
+	else { StartSearch(); }
+}
+
+void UCC_SearchForTarget::MoveToTargetAndAttack()
+{
+	if (!OwningEnemy.IsValid() || !OwningAIController.IsValid() || !TargetBaseCharacter.IsValid()) return;
+	if (!OwningEnemy->IsAlive())
+	{
+		StartSearch();
+		return;
+	}
+	MoveToActorLocationTask = UAITask_MoveTo::AIMoveTo(OwningAIController.Get(),
+		FVector(),
+		TargetBaseCharacter.Get(),
+		OwningEnemy->AcceptanceRadius);
+
+	MoveToActorLocationTask->OnMoveTaskFinished.AddUObject(this, &ThisClass::AttackTarget);
+	MoveToActorLocationTask->ReadyForActivation();
 	
-	// Wait for rotation animation, then attack
+}
+
+void UCC_SearchForTarget::AttackTarget(TEnumAsByte<EPathFollowingResult::Type> Result, AAIController* AIController)
+{
+	if (Result != EPathFollowingResult::Success) {StartSearch(); return;};
+	OwningEnemy->RotateToTarget(TargetBaseCharacter.Get());
+	
 	AttackDelayTask = UAbilityTask_WaitDelay::WaitDelay(this, OwningEnemy->GetTimeLineLength());
-	AttackDelayTask->OnFinish.AddDynamic(this, &ThisClass::ExecuteAttack);
+	AttackDelayTask->OnFinish.AddDynamic(this, &ThisClass::Attack);
 	AttackDelayTask->ReadyForActivation();
 }
 
-void UCC_SearchForTarget::OnNoTargetFound()
+void UCC_SearchForTarget::Attack()
 {
-	if (bDrawDebugs && GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("No valid target found - will retry"));
-	}
-}
-
-void UCC_SearchForTarget::OnAttackEnded(FGameplayEventData Payload)
-{
-	if (bDrawDebugs && GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("Attack ended - restarting cycle"));
-	}
-	
-	StartSearchAndAttackCycle();
-}
-
-void UCC_SearchForTarget::ExecuteAttack()
-{
-	if (bDrawDebugs && GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, TEXT("Executing attack"));
-	}
-	
 	const FGameplayTag AttackTag = CCTags::CCAbilities::Enemy::Attack;
 	GetAbilitySystemComponentFromActorInfo()->TryActivateAbilitiesByTag(AttackTag.GetSingleTagContainer());
 }

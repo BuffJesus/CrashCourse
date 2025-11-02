@@ -6,15 +6,19 @@
 #include "AbilitySystem/Abilities/CC_GameplayAbility.h"
 #include "CC_SearchForTarget.generated.h"
 
-class UCC_AITask_FindAndMoveToTarget;
+namespace EPathFollowingResult
+{
+	enum Type : int;
+}
+
+class UAITask_MoveTo;
 class ACC_BaseCharacter;
 class UAbilityTask_WaitDelay;
 class UAbilityTask_WaitGameplayEvent;
 class AAIController;
 class ACC_EnemyCharacter;
-
 /**
- * Enemy ability that continuously searches for and attacks player targets
+ * 
  */
 UCLASS()
 class CRASHCOURSE_API UCC_SearchForTarget : public UCC_GameplayAbility
@@ -36,22 +40,28 @@ private:
 	TObjectPtr<UAbilityTask_WaitGameplayEvent> WaitGameplayEventTask;
 
 	UPROPERTY()
+	TObjectPtr<UAbilityTask_WaitDelay> SearchDelayTask;
+
+	UPROPERTY()
 	TObjectPtr<UAbilityTask_WaitDelay> AttackDelayTask;
 
 	UPROPERTY()
-	TObjectPtr<UCC_AITask_FindAndMoveToTarget> FindAndMoveTask;
+	TObjectPtr<UAITask_MoveTo> MoveToActorLocationTask;
 
-	void StartSearchAndAttackCycle();
-
-	UFUNCTION()
-	void OnAttackEnded(FGameplayEventData Payload);
+	void StartSearch();
 
 	UFUNCTION()
-	void OnTargetReached(AActor* Target);
+	void EndAttackEventReceived(FGameplayEventData Payload);
 
 	UFUNCTION()
-	void OnNoTargetFound();
+	void Search();
 
 	UFUNCTION()
-	void ExecuteAttack();
+	void MoveToTargetAndAttack();
+
+	UFUNCTION()
+	void AttackTarget(TEnumAsByte<EPathFollowingResult::Type> Result, AAIController* AIController);
+
+	UFUNCTION()
+	void Attack();
 };
