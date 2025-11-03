@@ -89,3 +89,17 @@ void ACC_PlayerCharacter::OnRep_PlayerState()
 	if (!IsValid(CCAttributeSet)) return;
 	GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(CCAttributeSet->GetHealthAttribute()).AddUObject(this, &ThisClass::OnHealthChanged);
 }
+
+void ACC_PlayerCharacter::HandleRespawn()
+{
+    Super::HandleRespawn();
+    
+    // Reinitialize the ASC after respawn
+    if (IsValid(GetAbilitySystemComponent()))
+    {
+        GetAbilitySystemComponent()->InitAbilityActorInfo(GetPlayerState(), this);
+        
+        // Force the ASC to refresh its avatar actor
+        GetAbilitySystemComponent()->RefreshAbilityActorInfo();
+    }
+}
