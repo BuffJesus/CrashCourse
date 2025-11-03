@@ -31,28 +31,51 @@ void UCC_AttributeSet::OnRep_AttributesInitialized()
 void UCC_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
-
-	if (Data.EvaluatedData.Attribute == GetHealthAttribute() && bAttributesInitialized)
+    
+	// Only clamp if MaxHealth has been initialized
+	if (Data.EvaluatedData.Attribute == GetHealthAttribute() && GetMaxHealth() > 0.f)
 	{
 		SetHealth(FMath::Clamp(GetHealth(), 0.f, GetMaxHealth()));
 	}
-
-	if (Data.EvaluatedData.Attribute == GetManaAttribute() && bAttributesInitialized)
+    
+	// Only clamp if MaxMana has been initialized
+	if (Data.EvaluatedData.Attribute == GetManaAttribute() && GetMaxMana() > 0.f)
 	{
 		SetMana(FMath::Clamp(GetMana(), 0.f, GetMaxMana()));
 	}
-	
+    
+	// Handle death event
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute() && GetHealth() <= 0.f)
 	{
 		FGameplayEventData Payload;
 		Payload.Instigator = Data.Target.GetAvatarActor();
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.EffectSpec.GetEffectContext().GetInstigator(), CCTags::Events::KillScored, Payload);
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+			Data.EffectSpec.GetEffectContext().GetInstigator(), 
+			CCTags::Events::KillScored, 
+			Payload
+		);
 	}
 
+	// Broadcast initialization
 	if (!bAttributesInitialized)
 	{
 		bAttributesInitialized = true;
 		OnAttributesInitialized.Broadcast();
+	}
+}
+
+void UCC_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+{
+	Super::PreAttributeChange(Attribute, NewValue);
+    
+	// Always clamp to minimum of 0
+	if (Attribute == GetHealthAttribute())
+	{
+		NewValue = FMath::Max(NewValue, 0.f);
+	}
+	else if (Attribute == GetManaAttribute())
+	{
+		NewValue = FMath::Max(NewValue, 0.f);
 	}
 }
 
