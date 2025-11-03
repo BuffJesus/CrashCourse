@@ -20,10 +20,28 @@ void UCC_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(ThisClass, bAttributesInitialized);
 }
 
+void UCC_AttributeSet::OnRep_AttributesInitialized()
+{
+	if (bAttributesInitialized)
+	{
+		OnAttributesInitialized.Broadcast();
+	}
+}
+
 void UCC_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
 
+	if (Data.EvaluatedData.Attribute == GetHealthAttribute() && bAttributesInitialized)
+	{
+		SetHealth(FMath::Clamp(GetHealth(), 0.f, GetMaxHealth()));
+	}
+
+	if (Data.EvaluatedData.Attribute == GetManaAttribute() && bAttributesInitialized)
+	{
+		SetMana(FMath::Clamp(GetMana(), 0.f, GetMaxMana()));
+	}
+	
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute() && GetHealth() <= 0.f)
 	{
 		FGameplayEventData Payload;
@@ -34,14 +52,6 @@ void UCC_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 	if (!bAttributesInitialized)
 	{
 		bAttributesInitialized = true;
-		OnAttributesInitialized.Broadcast();
-	}
-}
-
-void UCC_AttributeSet::OnRep_AttributesInitialized()
-{
-	if (bAttributesInitialized)
-	{
 		OnAttributesInitialized.Broadcast();
 	}
 }
