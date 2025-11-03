@@ -1,7 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "AbilitySystem/Abilities/Enemy/CC_SearchForTarget.h"
+﻿#include "AbilitySystem/Abilities/Enemy/CC_SearchForTarget.h"
 
 #include "AIController.h"
 #include "Abilities/Async/AbilityAsync_WaitGameplayEvent.h"
@@ -11,8 +8,6 @@
 #include "GameplayTags/CC_Tags.h"
 #include "Tasks/AITask_MoveTo.h"
 #include "Utils/CC_BlueprintLibrary.h"
-
-class UAbilityAsync_WaitGameplayEvent;
 
 UCC_SearchForTarget::UCC_SearchForTarget()
 {
@@ -92,7 +87,6 @@ void UCC_SearchForTarget::MoveToTargetAndAttack()
 
 	MoveToActorLocationTask->OnMoveTaskFinished.AddUObject(this, &ThisClass::AttackTarget);
 	MoveToActorLocationTask->ReadyForActivation();
-	
 }
 
 void UCC_SearchForTarget::AttackTarget(TEnumAsByte<EPathFollowingResult::Type> Result, AAIController* AIController)

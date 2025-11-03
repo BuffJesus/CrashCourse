@@ -1,6 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/CC_GameplayAbility.h"
@@ -17,9 +15,7 @@ class UAbilityTask_WaitDelay;
 class UAbilityTask_WaitGameplayEvent;
 class AAIController;
 class ACC_EnemyCharacter;
-/**
- * 
- */
+
 UCLASS()
 class CRASHCOURSE_API UCC_SearchForTarget : public UCC_GameplayAbility
 {
