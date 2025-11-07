@@ -1,16 +1,17 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+﻿// CC_EnemyCharacter.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "CC_BaseCharacter.h"
+#include "Interfaces/CC_DeathPickupInterface.h"
+#include "Utils/CC_Types.h"
 #include "CC_EnemyCharacter.generated.h"
 
 class UAttributeSet;
 class UAbilitySystemComponent;
 
 UCLASS()
-class CRASHCOURSE_API ACC_EnemyCharacter : public ACC_BaseCharacter
+class CRASHCOURSE_API ACC_EnemyCharacter : public ACC_BaseCharacter, public ICC_DeathPickupInterface
 {
 	GENERATED_BODY()
 
@@ -37,6 +38,16 @@ public:
 	bool bIsBeingLaunched = false;
 
 	void StopMovementUntilLanded();
+
+	// Configure pickups directly in Blueprint!
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Death Pickups")
+	TArray<FPickupSpawnInfo> DeathPickups;
+    
+	// Interface implementation
+	virtual TArray<FPickupSpawnInfo> GetDeathPickups_Implementation() const override
+	{
+		return DeathPickups;
+	}
 
 protected:
 	

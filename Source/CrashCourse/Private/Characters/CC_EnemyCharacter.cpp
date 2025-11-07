@@ -9,6 +9,7 @@
 #include "GameplayTags/CC_Tags.h"
 #include "Net/UnrealNetwork.h"
 #include "Runtime/AIModule/Classes/AIController.h"
+#include "Utils/CC_Types.h"
 
 
 ACC_EnemyCharacter::ACC_EnemyCharacter()
