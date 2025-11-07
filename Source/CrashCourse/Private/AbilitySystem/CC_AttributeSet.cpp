@@ -68,7 +68,7 @@ void UCC_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, f
 {
 	Super::PreAttributeChange(Attribute, NewValue);
     
-	// Always clamp to minimum of 0
+	// Always clamp to a minimum of 0
 	if (Attribute == GetHealthAttribute())
 	{
 		NewValue = FMath::Max(NewValue, 0.f);
