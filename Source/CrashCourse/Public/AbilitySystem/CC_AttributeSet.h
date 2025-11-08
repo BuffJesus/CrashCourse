@@ -81,10 +81,10 @@ public:
 	UFUNCTION()
 	void OnRep_Level(const FGameplayAttributeData& OldValue);
 
-protected:
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XP")
 	TObjectPtr<UCurveTable> XPCurveTable;
+
+protected:
 	
 	float GetXPRequiredForLevel(int32 InLevel) const;
 	

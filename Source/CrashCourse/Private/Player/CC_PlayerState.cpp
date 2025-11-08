@@ -1,6 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
+﻿// CC_PlayerState.cpp
 #include "Player/CC_PlayerState.h"
 #include "AbilitySystem/CC_AbilitySystemComponent.h"
 #include "AbilitySystem/CC_AttributeSet.h"
@@ -14,6 +12,17 @@ ACC_PlayerState::ACC_PlayerState()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	AttributeSet = CreateDefaultSubobject<UCC_AttributeSet>(TEXT("AttributeSet"));
+}
+
+void ACC_PlayerState::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Assign the curve table to the AttributeSet
+	if (XPCurveTable && AttributeSet)
+	{
+		AttributeSet->XPCurveTable = XPCurveTable;
+	}
 }
 
 UAbilitySystemComponent* ACC_PlayerState::GetAbilitySystemComponent() const

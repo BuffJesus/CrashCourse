@@ -21,7 +21,7 @@ void UCC_AttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION_NOTIFY(ThisClass, MaxXP, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ThisClass, Level, COND_None, REPNOTIFY_Always);
 
-	DOREPLIFETIME(ThisClass, bAttributesInitialized);
+	DOREPLIFETIME_CONDITION_NOTIFY(ThisClass, bAttributesInitialized, COND_None, REPNOTIFY_Always);
 }
 
 void UCC_AttributeSet::OnRep_AttributesInitialized()

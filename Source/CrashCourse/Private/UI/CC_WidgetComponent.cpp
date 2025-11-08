@@ -76,19 +76,26 @@ void UCC_WidgetComponent::BindWidgetToAttributeChanges(UWidget* WidgetObject,
 	const TTuple<FGameplayAttribute, FGameplayAttribute>& Pair) const
 {
 	UCC_AttributeWidget* AttributeWidget = Cast<UCC_AttributeWidget>(WidgetObject);
-	if (!IsValid(AttributeWidget)) return; // We only care about CC Attribute Widgets
-	if (!AttributeWidget->MatchesAttributes(Pair)) return; // Only subscribe for matching Attributes
+	if (!IsValid(AttributeWidget)) return;
+	if (!AttributeWidget->MatchesAttributes(Pair)) return;
+	
+	// ADD THIS LOG
+	UE_LOG(LogTemp, Warning, TEXT("Binding widget: %s to attributes: %s -> %s"), 
+		*AttributeWidget->GetName(), 
+		*Pair.Key.GetName(), 
+		*Pair.Value.GetName());
+	
 	AttributeWidget->AvatarActor = CrashCharacter;
 
-	AttributeWidget->OnAttributeChange(Pair, AttributeSet.Get(), 0.f); // for initial values
+	AttributeWidget->OnAttributeChange(Pair, AttributeSet.Get(), 0.f);
 
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Pair.Key).AddLambda([this, AttributeWidget, &Pair](const FOnAttributeChangeData& AttributeChangeData)
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Pair.Key).AddLambda([this, AttributeWidget, Pair](const FOnAttributeChangeData& AttributeChangeData)
 	{
-		AttributeWidget->OnAttributeChange(Pair, AttributeSet.Get(), AttributeChangeData.OldValue); // For changes during the game
+		AttributeWidget->OnAttributeChange(Pair, AttributeSet.Get(), AttributeChangeData.OldValue);
 	});
 
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Pair.Value).AddLambda([this, AttributeWidget, &Pair](const FOnAttributeChangeData& AttributeChangeData)
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(Pair.Value).AddLambda([this, AttributeWidget, Pair](const FOnAttributeChangeData& AttributeChangeData)
 	{
-		AttributeWidget->OnAttributeChange(Pair, AttributeSet.Get(), AttributeChangeData.OldValue); // For changes during the game
+		AttributeWidget->OnAttributeChange(Pair, AttributeSet.Get(), AttributeChangeData.OldValue);
 	});
 }
