@@ -59,9 +59,6 @@ public:
 
 	UFUNCTION()
 	void OnRep_MaxMana(const FGameplayAttributeData& OldValue);
-
-protected:
-
-	void SpawnDeathPickups(AActor* DeadActor);
+	
 	
 };
