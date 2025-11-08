@@ -111,35 +111,19 @@ void UCC_AttributeSet::OnRep_MaxMana(const FGameplayAttributeData& OldValue)
 
 void UCC_AttributeSet::SpawnDeathPickups(AActor* DeadActor)
 {
-    UE_LOG(LogTemp, Warning, TEXT("SpawnDeathPickups called for: %s"), *DeadActor->GetName());
-    
     // Only spawn on server (multiplayer safety)
-    if (!DeadActor || !DeadActor->HasAuthority())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Failed authority check - HasAuthority: %s"), DeadActor ? (DeadActor->HasAuthority() ? TEXT("true") : TEXT("false")) : TEXT("null"));
-        return;
-    }
-    
+    if (!DeadActor || !DeadActor->HasAuthority()) return;
+	
     // Check if actor implements the death pickup interface
-    if (!DeadActor->Implements<UCC_DeathPickupInterface>())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Actor does not implement ICC_DeathPickupInterface"));
-        return;
-    }
-    
-    UE_LOG(LogTemp, Warning, TEXT("Interface check passed!"));
+    if (!DeadActor->Implements<UCC_DeathPickupInterface>()) return;
     
     UWorld* World = DeadActor->GetWorld();
-    if (!World)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No world found"));
-        return;
-    }
+    if (!World) return;
     
     // Get pickup configuration from the dead actor
     TArray<FPickupSpawnInfo> PickupConfigs = ICC_DeathPickupInterface::Execute_GetDeathPickups(DeadActor);
     
-    UE_LOG(LogTemp, Warning, TEXT("Pickup config count: %d"), PickupConfigs.Num());
+    if (PickupConfigs.Num() == 0) return;
     
     FVector DeathLocation = DeadActor->GetActorLocation();
     FRotator SpawnRotation = FRotator::ZeroRotator;
@@ -149,28 +133,16 @@ void UCC_AttributeSet::SpawnDeathPickups(AActor* DeadActor)
     {
         const FPickupSpawnInfo& PickupInfo = PickupConfigs[ConfigIndex];
         
-        UE_LOG(LogTemp, Warning, TEXT("Processing pickup %d - Class: %s"), ConfigIndex, PickupInfo.PickupClass ? *PickupInfo.PickupClass->GetName() : TEXT("NULL"));
-        
         // Validate pickup class
-        if (!PickupInfo.PickupClass)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Pickup class is null, skipping"));
-            continue;
-        }
+        if (!PickupInfo.PickupClass) continue;
         
         // Roll for spawn probability
         float RandomRoll = FMath::FRand();
-        UE_LOG(LogTemp, Warning, TEXT("Spawn chance: %f, Random roll: %f"), PickupInfo.SpawnChance, RandomRoll);
         
-        if (RandomRoll > PickupInfo.SpawnChance)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Failed probability check, skipping"));
-            continue; // Failed the probability check
-        }
+        if (RandomRoll > PickupInfo.SpawnChance) continue;
         
         // Determine how many of this pickup to spawn
         int32 SpawnCount = FMath::RandRange(PickupInfo.MinSpawnCount, PickupInfo.MaxSpawnCount);
-        UE_LOG(LogTemp, Warning, TEXT("Spawning %d pickups"), SpawnCount);
         
         // Spawn the pickups
         for (int32 i = 0; i < SpawnCount; ++i)
@@ -183,9 +155,7 @@ void UCC_AttributeSet::SpawnDeathPickups(AActor* DeadActor)
             );
             
             FVector SpawnLocation = DeathLocation + RandomOffset;
-            
-            UE_LOG(LogTemp, Warning, TEXT("Attempting spawn at location: %s"), *SpawnLocation.ToString());
-            
+        	
             // Setup spawn parameters
             FActorSpawnParameters SpawnParams;
             SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -200,7 +170,6 @@ void UCC_AttributeSet::SpawnDeathPickups(AActor* DeadActor)
             
             if (SpawnedPickup)
             {
-                UE_LOG(LogTemp, Warning, TEXT("Successfully spawned pickup: %s"), *SpawnedPickup->GetName());
                 
                 // Optional: Add upward impulse if pickup has physics enabled
                 if (UPrimitiveComponent* RootPrimitive = Cast<UPrimitiveComponent>(SpawnedPickup->GetRootComponent()))
@@ -216,13 +185,8 @@ void UCC_AttributeSet::SpawnDeathPickups(AActor* DeadActor)
                         
                         // Apply impulse for nice "pop" effect
                         RootPrimitive->AddImpulse(ImpulseDirection * 400.f, NAME_None, true);
-                        UE_LOG(LogTemp, Warning, TEXT("Applied physics impulse"));
                     }
                 }
-            }
-            else
-            {
-                UE_LOG(LogTemp, Error, TEXT("Failed to spawn pickup!"));
             }
         }
     }
