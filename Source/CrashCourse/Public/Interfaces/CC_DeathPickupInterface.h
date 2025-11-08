@@ -20,4 +20,7 @@ public:
 	// Get the pickup configuration for this actor
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Death Pickups")
 	TArray<FPickupSpawnInfo> GetDeathPickups() const;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Death Pickups")
+	float GetXPReward();
 };

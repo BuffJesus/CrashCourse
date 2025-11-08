@@ -48,6 +48,18 @@ public:
 	FGameplayAttributeData MaxMana;
 	ATTRIBUTE_ACCESSORS_BASIC(ThisClass, MaxMana)
 
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_XP)
+	FGameplayAttributeData XP;
+	ATTRIBUTE_ACCESSORS_BASIC(ThisClass, XP)
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxXP)
+	FGameplayAttributeData MaxXP;
+	ATTRIBUTE_ACCESSORS_BASIC(ThisClass, MaxXP)
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Level)
+	FGameplayAttributeData Level;
+	ATTRIBUTE_ACCESSORS_BASIC(ThisClass, Level)
+
 	UFUNCTION()
 	void OnRep_Health(const FGameplayAttributeData& OldValue);
 
@@ -59,6 +71,21 @@ public:
 
 	UFUNCTION()
 	void OnRep_MaxMana(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	void OnRep_XP(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	void OnRep_MaxXP(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	void OnRep_Level(const FGameplayAttributeData& OldValue);
+
+protected:
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XP")
+	TObjectPtr<UCurveTable> XPCurveTable;
+	
+	float GetXPRequiredForLevel(int32 InLevel) const;
 	
 };

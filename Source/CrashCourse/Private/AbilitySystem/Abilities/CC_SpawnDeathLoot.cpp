@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "GameplayTags/CC_Tags.h"
 #include "Interfaces/CC_DeathPickupInterface.h"
+#include "Interfaces/CC_XPPickupInterface.h"
 #include "Utils/CC_Types.h"
 
 UCC_SpawnDeathLoot::UCC_SpawnDeathLoot()
@@ -161,6 +162,12 @@ void UCC_SpawnDeathLoot::SpawnDeathPickups(AActor* DeadActor)
 			
 			if (SpawnedPickup)
 			{
+				// If this is an XP pickup, set the XP amount from the enemy's config
+				if (PickupInfo.XPAmount > 0.f && SpawnedPickup->Implements<UCC_XPPickupInterface>())
+				{
+					ICC_XPPickupInterface::Execute_SetXPAmount(SpawnedPickup, PickupInfo.XPAmount);
+				}
+				
 				// Optional: Add upward impulse if pickup has physics enabled
 				if (UPrimitiveComponent* RootPrimitive = Cast<UPrimitiveComponent>(SpawnedPickup->GetRootComponent()))
 				{

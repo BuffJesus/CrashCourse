@@ -6,6 +6,7 @@ namespace CCTags
 	namespace SetByCaller
 	{
 		UE_DEFINE_GAMEPLAY_TAG_COMMENT(Projectile, "CCTags.SetByCaller.Projectile", "Tag for Set by Caller Magnitude Projectile");
+		UE_DEFINE_GAMEPLAY_TAG_COMMENT(XP, "CCTags.SetByCaller.XP", "Tag for Set by Caller XP");
 	}
 	
 	namespace CCAbilities

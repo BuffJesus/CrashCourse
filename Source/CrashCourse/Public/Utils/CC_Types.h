@@ -9,26 +9,25 @@ struct FPickupSpawnInfo
 {
 	GENERATED_BODY()
 
-	// The pickup actor to spawn
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Crash|Pickup")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AActor> PickupClass;
 
-	// Chance to spawn (0-1)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Crash|Pickup")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SpawnChance = 1.0f;
 
-	// How many to spawn (random btwn min and max)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Crash|Pickup")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MinSpawnCount = 1;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Crash|Pickup")
-	int32 MaxSpawnCount = 10;
 
-	// Random scatter radius
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Crash|Pickup")
-	float ScatterRadius = 100.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MaxSpawnCount = 1;
 
-	// Height offset for spawn
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Crash|Pickup")
-	float HeightOffset = 100.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ScatterRadius = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HeightOffset = 50.f;
+
+	/** XP amount for XP pickups (ignored for other pickup types) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XP")
+	float XPAmount = 0.f;
 };
